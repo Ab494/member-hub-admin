@@ -1,0 +1,187 @@
+// Prisma schema for MemberHub Membership Management System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User roles enum
+enum Role {
+  ADMIN
+  STAFF
+}
+
+// Member status enum
+enum MemberStatus {
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+}
+
+// Payment status enum
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// Admin/User model for authentication
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(STAFF)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+// Membership Package model
+model Package {
+  id               String   @id @default(uuid())
+  name             String
+  price            Decimal  @db.Decimal(10, 2)
+  durationDays     Int
+  description      String?  @db.Text
+  axtraxDepartmentId String?  @unique
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  members          Member[]
+  payments         Payment[]
+  renewals         Renewal[]
+
+  @@map("packages")
+}
+
+// Member model
+model Member {
+  id              String        @id @default(uuid())
+  memberCode      String        @unique
+  firstName       String
+  lastName        String
+  phone           String
+  email           String        @unique
+  status          MemberStatus  @default(ACTIVE)
+  enrolledAt      DateTime      @default(now())
+  expiresAt       DateTime
+  axtraxUserId    String?       @unique
+
+  packageId       String
+  package         Package       @relation(fields: [packageId], references: [id])
+
+  payments        Payment[]
+  renewals        Renewal[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([memberCode])
+  @@index([phone])
+  @@index([email])
+  @@index([status])
+  @@index([firstName, lastName])
+  @@map("members")
+}
+
+// Payment model
+model Payment {
+  id              String        @id @default(uuid())
+  amount          Decimal       @db.Decimal(10, 2)
+  mpesaReceipt    String?       @unique
+  mpesaPhone      String?
+  mpesaTransactionId String?    @unique
+  status          PaymentStatus @default(PENDING)
+  resultDesc      String?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  memberId        String
+  member          Member        @relation(fields: [memberId], references: [id])
+
+  packageId       String
+  package         Package       @relation(fields: [packageId], references: [id])
+
+  renewal         Renewal?
+
+  @@index([memberId])
+  @@index([status])
+  @@index([mpesaReceipt])
+  @@map("payments")
+}
+
+// Renewal model - tracks membership renewals
+model Renewal {
+  id              String   @id @default(uuid())
+  previousExpiry  DateTime
+  newExpiry       DateTime
+  amount          Decimal  @db.Decimal(10, 2)
+  createdAt       DateTime @default(now())
+
+  memberId        String
+  member          Member   @relation(fields: [memberId], references: [id])
+
+  packageId       String
+  package         Package  @relation(fields: [packageId], references: [id])
+
+  paymentId       String   @unique
+  payment         Payment  @relation(fields: [paymentId], references: [id])
+
+  @@index([memberId])
+  @@map("renewals")
+}
+
+// Audit Log model - tracks all admin actions
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String
+  entity      String
+  entityId    String?
+  oldValue    Json?
+  newValue    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// MPESA Transaction model - tracks all MPESA operations
+model MpesaTransaction {
+  id              String   @id @default(uuid())
+  transactionType String
+  transId         String   @unique
+  transTime       String
+  amount          Decimal  @db.Decimal(10, 2)
+  shortCode       String
+  billRefNumber   String?
+  invoiceNumber   String?
+  orgAccountBalance String?
+  thirdPartyTransID String?
+  msisdn          String
+  resultCode      Int?
+  resultDesc      String?
+  rawResponse     Json
+  createdAt       DateTime @default(now())
+
+  @@index([transId])
+  @@index([msisdn])
+  @@map("mpesa_transactions")
+}

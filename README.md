@@ -1,73 +1,129 @@
-# Welcome to your Lovable project
+# MemberHub - Membership Management Dashboard
 
-## Project info
+A modern admin dashboard for managing memberships, built with React, Vite, Tailwind CSS, and TypeScript.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- 🔐 **Authentication** - JWT-based login with role-based access
+- 📊 **Dashboard** - Stats overview, recent renewals, revenue tracking
+- 👥 **Members Management** - Search, filter, view profiles
+- 💳 **Payments** - Transaction history with filters
+- 📦 **Packages CRUD** - Create, edit, delete membership packages
+- 📱 **Responsive** - Mobile-friendly design
+- 🔄 **MPESA Integration** - STK push for renewals (ready for backend)
+- 🔗 **AxTraxNG Ready** - Sync status fields prepared
 
-There are several ways of editing your application.
+## Quick Start
 
-**Use Lovable**
+1. Clone and install dependencies:
+```bash
+npm install
+```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+2. Create `.env` file:
+```env
+VITE_API_URL=http://localhost:3001/api
+```
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. Run development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Folder Structure
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # Shadcn components
+│   ├── DashboardLayout.tsx
+│   ├── StatusBadge.tsx
+│   ├── StatCard.tsx
+│   ├── SearchInput.tsx
+│   ├── Pagination.tsx
+│   ├── Skeleton.tsx
+│   └── RenewMembershipModal.tsx
+├── contexts/           # React contexts
+│   └── AuthContext.tsx
+├── hooks/              # Custom hooks
+├── lib/                # Utilities
+│   ├── api.ts          # Axios client with interceptors
+│   └── utils.ts
+├── pages/              # Page components
+│   ├── Login.tsx
+│   ├── Dashboard.tsx
+│   ├── Members.tsx
+│   ├── MemberProfile.tsx
+│   ├── Payments.tsx
+│   └── Packages.tsx
+├── services/           # API services
+│   ├── auth.service.ts
+│   ├── members.service.ts
+│   ├── packages.service.ts
+│   ├── payments.service.ts
+│   └── dashboard.service.ts
+└── types/              # TypeScript types
+    └── index.ts
+```
 
-**Use GitHub Codespaces**
+## API Integration
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+All services in `src/services/` make real API calls to the backend.
+The axios client in `src/lib/api.ts` handles:
 
-## What technologies are used for this project?
+- JWT token management
+- Auth header injection
+- Token refresh
+- Error handling with toast notifications
 
-This project is built with:
+### Required Backend Endpoints
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/login` | Login with email/password |
+| POST | `/auth/refresh` | Refresh auth token |
+| POST | `/auth/logout` | Logout user |
+| GET | `/dashboard/stats` | Dashboard statistics |
+| GET | `/dashboard/revenue` | Revenue chart data |
+| GET | `/members` | List members with filters |
+| GET | `/members/:id` | Get single member |
+| POST | `/members` | Create new member |
+| PATCH | `/members/:id` | Update member |
+| DELETE | `/members/:id` | Delete member |
+| POST | `/members/renew` | Renew membership (STK push) |
+| POST | `/members/:id/sync-axtrax` | Sync with AxTraxNG |
+| GET | `/payments` | List payments with filters |
+| GET | `/payments/:id` | Get single payment |
+| GET | `/payments/stats` | Payment statistics |
+| GET | `/payments/export` | Export payments CSV |
+| GET | `/packages` | List all packages |
+| GET | `/packages/:id` | Get single package |
+| POST | `/packages` | Create package |
+| PATCH | `/packages/:id` | Update package |
+| DELETE | `/packages/:id` | Delete package |
+| POST | `/packages/:id/toggle-active` | Toggle package status |
 
-## How can I deploy this project?
+## AxTraxNG Integration
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Member profiles include sync status fields:
+- `axtraxId` - External system ID
+- `axtraxSyncStatus` - 'synced' | 'pending' | 'failed'
+- `axtraxLastSync` - Last sync timestamp
 
-## Can I connect a custom domain to my Lovable project?
+## Environment Variables
 
-Yes, you can!
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_URL` | Backend API base URL | `http://localhost:3001/api` |
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Tech Stack
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- **React 18** - UI framework
+- **Vite** - Build tool
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **Shadcn UI** - Component library
+- **React Router** - Navigation
+- **Axios** - HTTP client
+- **React Query** - Data fetching
+- **date-fns** - Date formatting
