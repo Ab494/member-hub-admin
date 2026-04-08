@@ -1,6 +1,3 @@
-# render.yaml — defines all services for member-hub-admin on Render
-# Render reads this file automatically from the root of your repo
-
 services:
 
   # ── Backend (Express API) ───────────────────────────────
@@ -20,13 +17,8 @@ services:
         fromDatabase:
           name: memberhub-db
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: memberhub-redis
-          type: redis
-          property: connectionString
       - key: JWT_SECRET
-        generateValue: true        # Render auto-generates a secure random value
+        generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
@@ -45,6 +37,10 @@ services:
         value: 100
       - key: MPESA_ENV
         value: sandbox
+      - key: REDIS_HOST
+        value: localhost
+      - key: REDIS_PORT
+        value: 6379
 
   # ── Frontend (React/Nginx) ──────────────────────────────
   - type: web
@@ -55,9 +51,8 @@ services:
       - key: VITE_API_URL
         value: https://memberhub-backend.onrender.com
 
-  # ── PostgreSQL Database ─────────────────────────────────
+# ── PostgreSQL Database ─────────────────────────────────
 databases:
   - name: memberhub-db
     databaseName: memberhub
-    user: memberhub_user
     plan: free
