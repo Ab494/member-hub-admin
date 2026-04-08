@@ -29,8 +29,6 @@ services:
         value: https://memberhub-frontend.onrender.com
       - key: LOG_LEVEL
         value: warn
-      - key: LOG_FILE_PATH
-        value: ./logs
       - key: RATE_LIMIT_WINDOW_MS
         value: 900000
       - key: RATE_LIMIT_MAX_REQUESTS
@@ -42,11 +40,16 @@ services:
       - key: REDIS_PORT
         value: 6379
 
-  # ── Frontend (React/Nginx) ──────────────────────────────
+  # ── Frontend (React Static Site) ───────────────────────
   - type: web
     name: memberhub-frontend
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         value: https://memberhub-backend.onrender.com
