@@ -1,61 +1,36 @@
-# ── Name ─────────────────────────────────────────────────
-# This name appears in the GitHub Actions tab on your repo
 name: CI
 
-# ── Triggers ─────────────────────────────────────────────
-# This workflow runs in two situations:
-# 1. When you push to main or dev
-# 2. When you open a Pull Request targeting main or dev
 on:
   push:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
 
-# ── Jobs ─────────────────────────────────────────────────
-# A job is a set of steps that run on the same machine.
-# We have 3 jobs: lint-frontend, test-backend, build-frontend
-# Jobs run in PARALLEL by default (saves time)
 jobs:
 
-  # ──────────────────────────────────────────────────────
-  # JOB 1: Lint the frontend
-  # Linting = checking code for style errors and bad patterns
-  # ──────────────────────────────────────────────────────
   lint-frontend:
     name: Lint Frontend
-    runs-on: ubuntu-latest   # GitHub gives us a fresh Ubuntu machine
-
+    runs-on: ubuntu-latest
     steps:
-      # Step 1: Download your code onto the GitHub machine
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Install Node.js on the machine
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: npm   # cache node_modules so future runs are faster
+          cache: npm
 
-      # Step 3: Install frontend dependencies
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Run the linter
-      # If any lint errors exist, this step fails and the pipeline stops
       - name: Run ESLint
         run: npm run lint
 
-  # ──────────────────────────────────────────────────────
-  # JOB 2: Test the backend
-  # ──────────────────────────────────────────────────────
   test-backend:
     name: Test Backend
     runs-on: ubuntu-latest
 
-    # These are services that run alongside the job
-    # The backend tests need a real database and Redis to run
     services:
       postgres:
         image: postgres:15-alpine
@@ -92,44 +67,36 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      # We cd into backend/ for all backend steps
       - name: Install backend dependencies
         run: npm install
         working-directory: backend
 
-      # Generate Prisma client before running tests
       - name: Generate Prisma client
         run: npx prisma generate
         working-directory: backend
 
-      # Run migrations against the test database
       - name: Run Prisma migrations
         run: npx prisma migrate deploy
         working-directory: backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/memberhub_test
 
-      # Run the actual tests
       - name: Run tests
         run: npm test
         working-directory: backend
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/memberhub_test
-          JWT_SECRET: test-secret
-          JWT_REFRESH_SECRET: test-refresh-secret
+          # These come from GitHub Secrets — never hardcoded
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
           REDIS_HOST: localhost
           REDIS_PORT: 6379
 
-  # ──────────────────────────────────────────────────────
-  # JOB 3: Build the frontend
-  # This confirms the React app compiles without errors
-  # "needs" means this job waits for lint to pass first
-  # ──────────────────────────────────────────────────────
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
-    needs: lint-frontend   # only runs if lint passes
+    needs: lint-frontend
 
     steps:
       - name: Checkout code
@@ -144,19 +111,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Vite needs VITE_API_URL at build time
-      # We use a placeholder here — real value comes at deploy time
       - name: Build React app
         run: npm run build
         env:
           VITE_API_URL: http://localhost:3001
 
-      # Upload the built files as an artifact
-      # An artifact is a file/folder saved from the pipeline
-      # You can download it from the GitHub Actions UI
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
           path: dist/
-          retention-days: 7   # keep it for 7 days
+          retention-days: 7
