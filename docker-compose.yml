@@ -1,0 +1,84 @@
+# docker-compose.yml — runs the entire member-hub-admin stack
+# Usage: docker compose up --build
+
+services:
+
+  # ── PostgreSQL Database ───────────────────────────────
+  # We use the official Postgres image — no Dockerfile needed.
+  # Docker Hub has thousands of ready-made images like this.
+  db:
+    image: postgres:15-alpine
+    container_name: memberhub_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: memberhub
+    ports:
+      - "5434:5432"        # host:container — access DB from your machine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data   # persist data between restarts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis Cache ───────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: memberhub_redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend (Express API) ─────────────────────────────
+  backend:
+    build:
+      context: ./backend        # use the Dockerfile inside /backend
+    container_name: memberhub_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy    # wait for DB to be ready before starting
+      redis:
+        condition: service_healthy    # wait for Redis to be ready before starting
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/memberhub
+      JWT_SECRET: dev-secret-change-in-production
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production
+      JWT_EXPIRES_IN: 1h
+      JWT_REFRESH_EXPIRES_IN: 7d
+      REDIS_HOST: redis
+      REDIS_PORT: 6380
+      FRONTEND_URL: http://localhost:8081
+      LOG_LEVEL: info
+      LOG_FILE_PATH: ./logs
+    ports:
+      - "3001:3001"
+
+  # ── Frontend (React) ──────────────────────────────────
+  frontend:
+    build:
+      context: .                    # use the Dockerfile in the root folder
+    container_name: memberhub_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"                   # your browser hits localhost:8081 → Nginx port 80
+
+# ── Named Volumes ─────────────────────────────────────
+# These keep your data safe even when containers are stopped/removed
+volumes:
+  postgres_data:
+  redis_data:

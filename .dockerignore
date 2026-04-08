@@ -1,0 +1,9 @@
+# Don't copy these into the Docker image
+
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.git/
+README.md
