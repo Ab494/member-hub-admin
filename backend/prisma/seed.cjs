@@ -3,15 +3,17 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-// Get admin credentials from environment - MUST be set
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+// Get admin credentials from environment or use defaults for development
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@memberhub.dev';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Admin User';
 
-if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  console.error('ERROR: ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be set!');
-  console.error('Example: ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=securepassword node prisma/seed.cjs');
-  process.exit(1);
+// Warn about using default credentials in development
+if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+  console.warn('⚠️  Using default admin credentials for development!');
+  console.warn(`   Email: ${ADMIN_EMAIL}`);
+  console.warn(`   Password: ${ADMIN_PASSWORD}`);
+  console.warn('   Set ADMIN_EMAIL and ADMIN_PASSWORD environment variables for production.');
 }
 
 async function main() {

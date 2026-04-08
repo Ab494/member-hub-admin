@@ -15,7 +15,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: memberhub
     ports:
-      - "5432:5432"        # host:container — access DB from your machine
+      - "5434:5432"        # host:container — access DB from your machine
     volumes:
       - postgres_data:/var/lib/postgresql/data   # persist data between restarts
     healthcheck:
@@ -30,7 +30,7 @@ services:
     container_name: memberhub_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -58,9 +58,9 @@ services:
       JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production
       JWT_EXPIRES_IN: 1h
       JWT_REFRESH_EXPIRES_IN: 7d
-      REDIS_HOST: redis             # "redis" is the service name above — Docker resolves it
-      REDIS_PORT: 6379
-      FRONTEND_URL: http://localhost:8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6380
+      FRONTEND_URL: http://localhost:8081
       LOG_LEVEL: info
       LOG_FILE_PATH: ./logs
     ports:
@@ -75,7 +75,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080:80"                   # your browser hits localhost:8080 → Nginx port 80
+      - "8081:80"                   # your browser hits localhost:8081 → Nginx port 80
 
 # ── Named Volumes ─────────────────────────────────────
 # These keep your data safe even when containers are stopped/removed
