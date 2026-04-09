@@ -52,7 +52,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://memberhub-backend.onrender.com
+        value: https://memberhub-backend.onrender.com/api
 
 # ── PostgreSQL Database ─────────────────────────────────
 databases:
