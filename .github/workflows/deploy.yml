@@ -1,14 +1,10 @@
-# deploy.yml — runs ONLY when code is merged to main
-# Triggers a deployment on Render after CI passes
-
 name: Deploy to Render
 
 on:
   push:
-    branches: [main]   # only runs on main, not dev or feature branches
+    branches: [main]
 
 jobs:
-
   deploy:
     name: Deploy to Render
     runs-on: ubuntu-latest
@@ -17,19 +13,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # This step calls Render's deploy hook URL
-      # Render will pull the latest code from main and redeploy
       - name: Deploy Backend to Render
         run: |
-          curl -s "https://api.render.com/deploy/srv-${{ secrets.RENDER_BACKEND_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}" \
-            -X POST \
-            -d ""
+          curl -s --request POST \
+            --url "https://api.render.com/v1/services/${{ secrets.RENDER_BACKEND_SERVICE_ID }}/deploys" \
+            --header "accept: application/json" \
+            --header "content-type: application/json" \
+            --header "authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            --data '{"clearCache":"do_not_clear"}'
 
       - name: Deploy Frontend to Render
         run: |
-          curl -s "https://api.render.com/deploy/srv-${{ secrets.RENDER_FRONTEND_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}" \
-            -X POST \
-            -d ""
+          curl -s --request POST \
+            --url "https://api.render.com/v1/services/${{ secrets.RENDER_FRONTEND_SERVICE_ID }}/deploys" \
+            --header "accept: application/json" \
+            --header "content-type: application/json" \
+            --header "authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            --data '{"clearCache":"do_not_clear"}'
 
       - name: Deployment triggered
         run: echo "Deployment triggered on Render. Check https://dashboard.render.com for status."
