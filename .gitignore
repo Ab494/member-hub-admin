@@ -45,3 +45,12 @@ backend/coverage/
 # Misc
 *.local
 *.tsbuildinfo
+
+# ── Terraform ─────────────────────────────────────────
+.terraform/              # downloaded providers (like node_modules)
+.terraform.lock.hcl      # can be committed, but optional
+*.tfstate                # STATE FILE — contains real infrastructure details, never commit
+*.tfstate.backup         # backup of state file
+terraform.tfvars         # contains secrets — never commit
+*.generated.yml          # generated files
+*.generated              # generated files
