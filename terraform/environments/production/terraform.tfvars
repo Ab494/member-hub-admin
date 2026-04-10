@@ -1,0 +1,1 @@
+db_password = "CHANGE_THIS_TO_STRONG_PASSWORD"
