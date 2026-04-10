@@ -39,7 +39,9 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(compression());
-app.use(morgan('combined', { stream: { write: (m) => logger.info(m.trim()) } }));
+// Custom request logger — logs method, path, status, duration, IP
+const { requestLogger } = require('./middleware/requestLogger.cjs');
+app.use(requestLogger);
 
 const limiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
@@ -56,10 +58,9 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/renewals', renewalsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
-});
+// Health check — includes DB status, uptime, memory
+const { healthCheck } = require('./utils/healthCheck.cjs');
+app.get('/health', healthCheck);
 
 // Error handler
 app.use((err, req, res, next) => {
